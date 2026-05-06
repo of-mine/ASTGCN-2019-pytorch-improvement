@@ -38,7 +38,6 @@ CUDA runtime used by PyTorch: 12.8
 在 Windows PowerShell 中，从项目根目录开始构建虚拟环境并安装全部依赖：
 
 ```powershell
-cd E:\GraduateDesign\reshow2\ASTGCN-2019-pytorch-master\ASTGCN-2019-pytorch-master
 py -3.11 -m venv .venv-py311-cu128
 .\.venv-py311-cu128\Scripts\Activate.ps1
 python -m pip install --upgrade pip setuptools wheel
