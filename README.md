@@ -206,19 +206,3 @@ python pyqt_result_dashboard.py
 3. `未来路网预测`
    选择目标路段和未来时间段后，系统会根据最近三周该路段的校准误差选择最优模型，再对未来 0-24 小时进行滚动预测。路网图中颜色和线宽表示潜在拥堵风险，点击路段可以查看对应预测值和模型指标。
 
-
-
-如果需要别人完整复现实验，可以把数据集下载地址、模型参数文件或训练结果通过网盘/Release 单独提供，并在 README 中说明放置路径。
-
-## Reference
-
-```latex
-@inproceedings{guo2019attention,
-  title={Attention based spatial-temporal graph convolutional networks for traffic flow forecasting},
-  author={Guo, Shengnan and Lin, Youfang and Feng, Ning and Song, Chao and Wan, Huaiyu},
-  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
-  volume={33},
-  pages={922--929},
-  year={2019}
-}
-```
