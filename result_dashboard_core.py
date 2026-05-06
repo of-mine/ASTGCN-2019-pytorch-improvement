@@ -585,8 +585,8 @@ class ExperimentManager(object):
         selected_spec = next(spec for spec in specs if spec.label == selected.label)
         node_prediction, node_target = self._predict_range_first_step(selected_spec, start_index, end_index, node_index)
         future_steps = len(node_prediction)
-        future_forecast = self._forecast_future_nodes(selected_spec, future_steps)
-        future_start_index = int(base_bundle["raw_channel1"].shape[0])
+        future_start_index = int(end_index + 1)
+        future_forecast = self._forecast_future_nodes_from_index(selected_spec, future_start_index, future_steps)
         future_end_index = future_start_index + future_steps
 
         return PurePredictionResult(
@@ -833,6 +833,43 @@ class ExperimentManager(object):
         time_bundle = self.load_time_series_bundle(spec.config_path)
 
         sequence = time_bundle["raw_channel1"].copy()
+        num_for_predict = int(time_bundle["num_for_predict"])
+        generated_steps = 0
+        predicted_chunks = []
+
+        with torch.no_grad():
+            while generated_steps < future_steps:
+                label_start_idx = sequence.shape[0]
+                sample_x = self._extract_forecast_sample(sequence, time_bundle, label_start_idx)
+                inputs = torch.from_numpy(sample_x[np.newaxis, ...]).type(torch.FloatTensor).to(self.device)
+                outputs = bundle["model"](inputs)
+                if isinstance(outputs, tuple):
+                    outputs = outputs[0]
+                block_prediction = outputs.detach().cpu().numpy()[0]
+
+                take_steps = min(num_for_predict, future_steps - generated_steps)
+                taken_block = block_prediction[:, :take_steps].T.astype(np.float32)
+                predicted_chunks.append(taken_block)
+                sequence = np.concatenate([sequence, taken_block[:, :, None]], axis=0)
+                generated_steps += take_steps
+
+        forecast = np.concatenate(predicted_chunks, axis=0)
+        self._future_forecast_cache[cache_key] = forecast
+        return forecast
+
+    def _forecast_future_nodes_from_index(self, spec, forecast_start_index, future_steps):
+        cache_key = ("from_index", spec.config_path, int(forecast_start_index), int(future_steps))
+        if cache_key in self._future_forecast_cache:
+            return self._future_forecast_cache[cache_key]
+
+        bundle = self.load_model_bundle(spec)
+        time_bundle = self.load_time_series_bundle(spec.config_path)
+        raw_sequence = time_bundle["raw_channel1"]
+
+        if forecast_start_index <= 0 or forecast_start_index > raw_sequence.shape[0]:
+            raise ValueError("forecast_start_index must be inside known raw sequence")
+
+        sequence = raw_sequence[:forecast_start_index].copy()
         num_for_predict = int(time_bundle["num_for_predict"])
         generated_steps = 0
         predicted_chunks = []

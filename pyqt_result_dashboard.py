@@ -332,39 +332,35 @@ class DashboardWindow(QMainWindow):
 
         validation_count = len(result.node_prediction)
         future_count = len(result.future_prediction)
-        validation_x = list(range(validation_count))
-        future_x = list(range(validation_count, validation_count + future_count))
+        validation_x = list(result.time_axis)
+        future_x = list(result.future_time_axis)
+        prediction_x = validation_x + future_x
+        prediction_y = list(result.node_prediction) + list(result.future_prediction)
 
-        axis.axvspan(-0.5, validation_count - 0.5, color="#e8f2ff", alpha=0.45, zorder=0)
-        axis.axvspan(validation_count - 0.5, validation_count + future_count - 0.5, color="#fff3dd", alpha=0.45, zorder=0)
-        axis.axvline(validation_count - 0.5, color="#666666", linestyle=":", linewidth=1.5)
+        split_index = int(result.end_index) + 0.5
+        axis.axvspan(int(result.start_index) - 0.5, int(result.end_index) + 0.5, color="#e8f2ff", alpha=0.45, zorder=0)
+        axis.axvspan(int(result.future_time_axis[0]) - 0.5, int(result.future_time_axis[-1]) + 0.5, color="#fff3dd", alpha=0.45, zorder=0)
+        axis.axvline(split_index, color="#666666", linestyle=":", linewidth=1.5)
 
         axis.plot(
             validation_x,
             result.node_target,
             label="Actual",
-            linewidth=1.8,
-            linestyle="--",
-            color="#333333",
+            linewidth=2.0,
+            linestyle="-",
+            color="#1565c0",
         )
         axis.plot(
-            validation_x,
-            result.node_prediction,
-            label="Validation Pred",
+            prediction_x,
+            prediction_y,
+            label="Pred + Future Pred",
             linewidth=2.0,
-            color=result.selected_model_color,
-        )
-        axis.plot(
-            future_x,
-            result.future_prediction,
-            label="Future Pred",
-            linewidth=2.0,
-            color=result.selected_model_color,
+            color="#e07a1f",
         )
 
         y_min, y_max = axis.get_ylim()
         axis.text(
-            max(0, validation_count // 2),
+            (int(result.start_index) + int(result.end_index)) / 2.0,
             y_max,
             "Validation: actual + prediction",
             ha="center",
@@ -373,7 +369,7 @@ class DashboardWindow(QMainWindow):
             color="#174a7c",
         )
         axis.text(
-            validation_count + max(0, future_count // 2),
+            (int(result.future_time_axis[0]) + int(result.future_time_axis[-1])) / 2.0,
             y_max,
             "Future: prediction only",
             ha="center",
@@ -393,7 +389,7 @@ class DashboardWindow(QMainWindow):
                 int(result.future_time_axis[-1]),
             )
         )
-        axis.set_xlabel("Display step")
+        axis.set_xlabel("Time index")
         axis.set_ylabel("Traffic Flow")
         axis.grid(True, linestyle="--", alpha=0.3)
         axis.legend(loc="best")
