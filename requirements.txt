@@ -1,0 +1,8 @@
+#.\.venv\Scripts\python.exe -m pip install -r requirements.txt（用来安装依赖的命令，下载到虚拟幻境里就不会污染全局环境了）
+numpy
+scipy
+scikit-learn
+matplotlib
+tensorboardX
+PyQt5
+torch
